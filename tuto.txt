@@ -1,0 +1,89 @@
+[Reenviado de ⚙️Soporte Bots Free⚙️]
+☺️Bienvenidos A TGMoodleFreeV1.5☺️
+———————————————-——-
+❗️Requisitos Tener Cuenta En❗️
+———————————————-——-
+📡Páginas funcionales Pv:
+http://moodle.uclv.edu.cu/
+https://evead.unah.edu.cu/
+https://evea.uh.cu/
+
+📡Publicas:
+https://cursos.uo.edu.cu/
+https://eva.uo.edu.cu/
+
+⚙️Usuarios Soporte⚙️
+@developer01dev
+@shapingdev
+———————————————-——-
+⚙️Spoporte De Urls⚙️
+———————————————-——-
+apkpure
+mega (Archivos y Carpetas)
+mediafire (Archivos)
+Youtube (Nota: Descargas un poco lentas)
+
+-Para generar un enlace de un archivo de telegram reenvie el archivo a @tg_file_link_bot y le respondra con un mensaje de varios botons, deje apretado el primer boton y copie el enlace.
+
+Hablar con los de soporte para q les de
+un tiempo de prueba al bot
+———————————————-——-
+📑Tutorial📑
+———————————————-——-
+-Al entrar en el bot les va a pedir su cuenta de moodle, antes especifique su host (ejemplo https://moodle.uclv.edu.cu/) y depues configure su cuenta enviandole al bot el comando /account  seguido myusuario,contraseña .
+-Puede cambiar el tamaño de los archivos comprimidos enviandole al bot el comando /zips tamaño
+———————————————-——-
+📑Ejemplo de Descarga📑
+———————————————-——-
+📥Descargando... 
+🔖Nombre: [GM]NFSHv107FW6[EU].part3.rar
+🗂Tamaño Total: 1.6GiB
+🗂Descargado: 128.0KiB
+📶Velocidad: 128.0KiB/s
+/cancel_asd9ajas9
+
+-Para Cancelar Una Descarga Basta Con Tocar El Comando /cancel_asd9ajas9 y al cabo de 3s se cancelara
+———————————————-——-
+📑Ejemplo de Subida📑
+———————————————-——-
+⏫Subiendo A La Nube☁️... 
+🔖Nombre: miui_LIMEGlobal_V12.5.3.0.RJQMIXM_5e23b81214_11.0.zip
+ (http://miui_limeglobal_v12.5.3.0.rjqmixm_5e23b81214_11.0.zip/) (http://miui_limeglobal_v12.5.3.0.rjqmixm_5e23b81214_11.0.zip/)⏫Subiendo: miui_LIMEGlobal_V127z.009
+🗂Tamaño Total: 195.9MiB
+🗂Subido: 176.0MiB
+📶Velocidad: 20.8MiB/s
+-Nota: Las Subidas No Se Cancelan
+———————————————-——-
+📑Ejemplo Proceso Terminado📑
+———————————————-——-
+📌Proceso Finalizado📌
+🔖Nombre: miui_LIMEGlobal_V12.5.3.0.RJQMIXM_5e23b81214_11.0.zip
+ (http://miui_limeglobal_v12.5.3.0.rjqmixm_5e23b81214_11.0.zip/) (http://miui_limeglobal_v12.5.3.0.rjqmixm_5e23b81214_11.0.zip/)🗂Tamaño Total: 2.5GiB
+📂Tamaño Partes: 300.0MiB
+📤Partes Subidas: 9/9
+
+📄Archivo: /file_10
+📘TxT: /txt_10
+🗑Borrar Archivo: /del_10
+
+-Para Extraer EL/Los Enlaces del archivo basta con tocar /file_10
+-Para Extraer EL/Los Enlaces del archivo en un txt basta con tocar /txt_10
+-Para Borrar EL archivo basta con tocar /txt_10
+-Nota: En Caso de q extraiga un archivo q no es envie el comando /files y espera a q salga la lista de arcvhivos
+———————————————-——-
+📑Ejemplo Lista De Archivos📑
+———————————————-———————————————-——-
+📑Archivos (4):
+/txt_0 /file_0 /del_0
+Crea un Repack Personalizado  BlackBox  HD.
+
+/txt_1 /file_1 /del_1
+How to Create a Modern Login Window in WPF using C# | C# Tutorial.
+
+/txt_2 /file_2 /del_2
+Phoenix Browser Fast Safe_v9.
+
+/txt_3 /file_3 /del_3
+Snapchat_v11.
+———————————————-——-
+☺️Feliz Estadia Fim.☺️
