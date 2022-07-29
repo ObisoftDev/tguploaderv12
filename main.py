@@ -27,6 +27,7 @@ from yarl import URL
 import re
 import random
 from draft_to_calendar import send_calendar
+import moodlews
 
 listproxy = []
 
@@ -72,62 +73,21 @@ def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jd
         user_info = jdb.get_user(update.message.sender.username)
         cloudtype = user_info['cloudtype']
         proxy = ProxyCloud.parse(user_info['proxy'])
+        draftlist=[]
         if cloudtype == 'moodle':
-            client = MoodleClient(user_info['moodle_user'],
-                                  user_info['moodle_password'],
-                                  user_info['moodle_host'],
-                                  user_info['moodle_repo_id'],
-                                  proxy=proxy)
-            loged = client.login()
-            itererr = 0
-            if loged:
-                if user_info['uploadtype'] == 'evidence':
-                    evidences = client.getEvidences()
-                    evidname = str(filename).split('.')[0]
-                    for evid in evidences:
-                        if evid['name'] == evidname:
-                            evidence = evid
-                            break
-                    if evidence is None:
-                        evidence = client.createEvidence(evidname)
-
-                originalfile = ''
-                if len(files)>1:
-                    originalfile = filename
-                draftlist = []
-                for f in files:
-                    f_size = get_file_size(f)
-                    resp = None
-                    iter = 0
-                    tokenize = False
-                    if user_info['tokenize']!=0:
-                       tokenize = True
-                    while resp is None:
-                          if user_info['uploadtype'] == 'evidence':
-                             fileid,resp = client.upload_file(f,evidence,fileid,progressfunc=uploadFile,args=(bot,message,originalfile,thread),tokenize=tokenize)
-                          elif user_info['uploadtype'] == 'draft':
-                             fileid,resp = client.upload_file_draft(f,progressfunc=uploadFile,args=(bot,message,originalfile,thread),tokenize=tokenize)
-                             draftlist.append(resp)
-                          elif user_info['uploadtype'] == 'perfil':
-                             fileid,resp = client.upload_file_perfil(f,progressfunc=uploadFile,args=(bot,message,originalfile,thread),tokenize=tokenize)
-                             draftlist.append(resp)
-                          elif user_info['uploadtype'] == 'blog':
-                             fileid,resp = client.upload_file_blog(f,progressfunc=uploadFile,args=(bot,message,originalfile,thread),tokenize=tokenize)
-                             draftlist.append(resp)
-                          elif user_info['uploadtype'] == 'calendar':
-                             fileid,resp = client.upload_file_calendar(f,progressfunc=uploadFile,args=(bot,message,originalfile,thread),tokenize=tokenize)
-                             draftlist.append(resp)
-                          iter += 1
-                          if iter>=10:
-                              break
-                    os.unlink(f)
-                if user_info['uploadtype'] == 'evidence':
-                    try:
-                        client.saveEvidence(evidence)
-                    except:pass
-                return draftlist
-            else:
-                bot.editMessageText(message,'❌Error En La Pagina❌')
+        	host = user_info['moodle_host']
+        	user = user_info['moodle_user']
+        	passw = user_info['moodle_password']
+        	token = moodlews.get_webservice_token(host,user,passw)
+        	print(token)
+        	for file in files:
+        		data = asyncio.run(moodlews.webservice_upload_file(host,token,file,progressfunc=uploadFile,proxy=proxy,args=(bot,message,filename,thread)))
+        		while not moodlews.store_exist(file):pass
+        		data = moodlews.get_store(file)
+        		if data:
+        		    urls = moodlews.make_draft_urls(data)
+        		    draftlist.append({'file':file,'url':urls[0]})
+        	return draftlist
         elif cloudtype == 'cloud':
             tokenize = False
             if user_info['tokenize']!=0:
@@ -262,7 +222,7 @@ def onmessage(update,bot:ObigramClient):
         tl_admin_user = os.environ.get('tl_admin_user')
 
         #set in debug
-        #tl_admin_user = 'obidevel'
+        tl_admin_user = 'obidevel'
 
         jdb = JsonDatabase('database')
         jdb.check_create()
@@ -845,9 +805,9 @@ def onmessage(update,bot:ObigramClient):
 
 def main():
     bot_token = os.environ.get('bot_token')
+    print('init bot.')
     #set in debug
-    #bot_token = '5350913309:AAGtZhfI9wOeboKk2oyCgg82oT6zE7UwBTw'
-
+    bot_token = '5350913309:AAGAiuzdRZUmjxwjeVKi7PHQScdDcmz23ws'
     bot = ObigramClient(bot_token)
     bot.onMessage(onmessage)
     bot.run()
