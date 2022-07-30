@@ -4,6 +4,8 @@ from pathlib import Path
 import requests
 import json
 from bs4 import BeautifulSoup
+from python_socks import ProxyType
+
 import ProxyCloud
 import base64
 import os
@@ -17,7 +19,7 @@ def get_webservice_token(host='',username='',password='',proxy:ProxyCloud=None):
     try:
         pproxy = None
         if proxy:
-            proxy.proxy.as_dict_proxy()
+            pproxy=proxy.as_dict_proxy()
         webserviceurl = f'{host}login/token.php?service=moodle_mobile_app&username={username}&password={password}'
         resp = requests.get(webserviceurl, proxies=pproxy)
         data = json.loads(resp.text)
@@ -62,17 +64,27 @@ async def webservice_upload_file(host='',token='',filepath='',progressfunc=None,
     try:
         pproxy = None
         if proxy:
-            proxy.as_dict_proxy()
+            pproxy= proxy.as_dict_proxy()
         webserviceuploadurl = f'{host}/webservice/upload.php?token={token}&filepath=/'
         filesize = os.stat(filepath).st_size
         of = ProgressFile(filepath,progressfunc,args)
         files={filepath: of}
         jsondata = '[]'
         if pproxy:
-            conn = ProxyConnector.from_url(pproxy['https'])
-        async with aiohttp.ClientSession() as session:
-            async with session.post(webserviceuploadurl, data={filepath: of},proxy=pproxy) as response:
-                jsondata = await response.text()
+            connector = ProxyConnector(
+                 proxy_type=ProxyType.SOCKS5,
+                 host=proxy.ip,
+                 port=proxy.port,
+                 rdns=True,
+                 verify_ssl=False
+            )
+            async with aiohttp.ClientSession(connector=connector) as session:
+                async with session.post(webserviceuploadurl, data={filepath: of}) as response:
+                    jsondata = await response.text()
+        else:
+            async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+                async with session.post(webserviceuploadurl, data={filepath: of}) as response:
+                    jsondata = await response.text()
         #resp = requests.post(webserviceuploadurl,data={filepath:of}, proxies=pproxy)
         of.close()
         data = json.loads(jsondata)
@@ -104,18 +116,18 @@ def make_draft_urls(data):
     return result
 
 
-def __progress(filename,current,total,args=None):
+def __progress(filename,current,total,spped,time,args=None):
     print(f'Downloading {filename} {current}/{total}')
 
 #import ProxyCloud
-#host  = 'https://avucm.pri.sld.cu/'
-#username = 'obysoft'
+#host  = 'https://uvs.ucm.cmw.sld.cu/'
+#username = 'oby2001'
 #password = 'Obysoft2001@'
-#token = get_webservice_token(host,username,password)
+#proxy = ProxyCloud.parse('socks5://KFDIKEYFJIJEGKYKJIGEGFYDJGHEFKRDEELGDIGF')
+#token = get_webservice_token(host,username,password,proxy=proxy)
 #print(token)
 #import asyncio
 #filename = 'requirements.txt'
-#proxy = ProxyCloud.parse('socks5://KKDHKJYEJIJJGFYGJKGIIHYJHKCJRDEHLFDGKI')
 #data = asyncio.run(webservice_upload_file(host,token,filename,progressfunc=__progress,proxy=proxy))
 #while not store_exist(filename):pass
 #print(get_store(filename))

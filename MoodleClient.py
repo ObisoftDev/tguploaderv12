@@ -611,8 +611,8 @@ class MoodleClient(object):
     
 
 
-client = MoodleClient('arley.medinab','JSAVH.2954','http://moodle.upr.edu.cu/',repo_id=5)
-loged = client.login()
-if loged:
-    req,data = client.upload_file_perfil('requirements.txt')
-    print(data)
+#client = MoodleClient('arley.medinab','JSAVH.2954','http://moodle.upr.edu.cu/',repo_id=5)
+#loged = client.login()
+#if loged:
+    #    req,data = client.upload_file_perfil('requirements.txt')
+#    print(data)
