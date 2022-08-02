@@ -13,7 +13,7 @@ from requests_toolbelt.multipart import encoder
 
 import aiohttp
 from aiohttp_socks import ProxyConnector
-
+import time
 
 def get_webservice_token(host='',username='',password='',proxy:ProxyCloud=None):
     try:
@@ -38,27 +38,41 @@ class ProgressFile(BufferedReader):
         super().__init__(raw=f)
         self.length = Path(filename).stat().st_size
         self.current = 0
+        self.time_start = time.time()
+        self.time_total = 0
+        self.size_per_second = 0
+        self.clock_start = time.time()
+        self.chunk_por = 0
 
     def read(self, size=None):
         global download_status
         calc_sz = size
+        self.chunk_por += size
         if not calc_sz:
             calc_sz = self.length - self.tell()
         if self.__read_callback:
-            self.__read_callback(self.__filename, self.tell(), self.length,0,0,self.__args)
+            self.size_per_second += size
+            tcurrent = time.time() - self.time_start
+            self.time_total += tcurrent
+            self.time_start = time.time()
+            if self.time_total >= 1:
+                clock_time = (self.length - self.chunk_por) / (self.size_per_second)
+                self.__read_callback(self.__filename, self.tell(), self.length,self.size_per_second,clock_time,self.__args)
+                self.time_total = 0
+                self.size_per_second = 0
         return super(ProgressFile, self).read(size)
 
 
 store = {}
 def create_store(name,data):
     global store
-    if name in store:return
     store[name] = data
 def get_store(name):
     if name in store:
         return store[name]
     return None
 def store_exist(name):return (name in store)
+def clear_store():store.clear()
 
 async def webservice_upload_file(host='',token='',filepath='',progressfunc=None,args=None,proxy:ProxyCloud=None):
     try:
@@ -95,12 +109,12 @@ async def webservice_upload_file(host='',token='',filepath='',progressfunc=None,
                 item['token'] = token
                 data[i] = item
                 i+=1
-            create_store(filepath,data)
+            create_store(filepath,[data,None])
             return data
-        create_store(filepath,None)
+        create_store(filepath,[None,data])
         return None
     except Exception as ex:
-        create_store(filepath,None)
+        create_store(filepath,[None,ex])
         print(str(ex))
         return None
 
@@ -120,10 +134,10 @@ def __progress(filename,current,total,spped,time,args=None):
     print(f'Downloading {filename} {current}/{total}')
 
 #import ProxyCloud
-#host  = 'https://uvs.ucm.cmw.sld.cu/'
-#username = 'oby2001'
-#password = 'Obysoft2001@'
-#proxy = ProxyCloud.parse('socks5://KFDIKEYFJIJEGKYKJIGEGFYDJGHEFKRDEELGDIGF')
+#host  = 'http://moodle.ismm.edu.cu/'
+#username = 'lpbatista'
+#password = 'HUasc7EN*'
+#proxy = ProxyCloud.parse('socks5://KDGKJKYIJDLGFGYKKHKFCHYDHHCGRFDGLFDHLJ')
 #token = get_webservice_token(host,username,password,proxy=proxy)
 #print(token)
 #import asyncio

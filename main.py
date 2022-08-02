@@ -67,6 +67,7 @@ def uploadFile(filename,currentBits,totalBits,speed,time,args):
 
 def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jdb=None):
     try:
+        err = None
         bot.editMessageText(message,'🤜Preparando Para Subir☁...')
         evidence = None
         fileid = None
@@ -75,19 +76,24 @@ def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jd
         proxy = ProxyCloud.parse(user_info['proxy'])
         draftlist=[]
         if cloudtype == 'moodle':
-        	host = user_info['moodle_host']
-        	user = user_info['moodle_user']
-        	passw = user_info['moodle_password']
-        	token = moodlews.get_webservice_token(host,user,passw,proxy=proxy)
-        	print(token)
-        	for file in files:
-        		data = asyncio.run(moodlews.webservice_upload_file(host,token,file,progressfunc=uploadFile,proxy=proxy,args=(bot,message,filename,thread)))
-        		while not moodlews.store_exist(file):pass
-        		data = moodlews.get_store(file)
-        		if data:
-        		    urls = moodlews.make_draft_urls(data)
-        		    draftlist.append({'file':file,'url':urls[0]})
-        	return draftlist
+            host = user_info['moodle_host']
+            user = user_info['moodle_user']
+            passw = user_info['moodle_password']
+            token = moodlews.get_webservice_token(host,user,passw,proxy=proxy)
+            if token:
+                print(token)
+                for file in files:
+                    data = asyncio.run(moodlews.webservice_upload_file(host,token,file,progressfunc=uploadFile,proxy=proxy,args=(bot,message,filename,thread)))
+                    while not moodlews.store_exist(file):pass
+                    data = moodlews.get_store(file)
+                    if data[0]:
+                        urls = moodlews.make_draft_urls(data[0])
+                        draftlist.append({'file':file,'url':urls[0]})
+                    else:
+                        err = data[1]
+            else:
+                err = 'Esta Nube No Tiene Sporte o Esta Caida 😢'
+            return draftlist,err
         elif cloudtype == 'cloud':
             tokenize = False
             if user_info['tokenize']!=0:
@@ -108,10 +114,11 @@ def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jd
                    data = client.upload_file(f,path=remotepath,progressfunc=uploadFile,args=(bot,message,originalfile,thread),tokenize=tokenize)
                    filesdata.append(data)
                    os.unlink(f)                
-               return filesdata
-        return None
+               return filesdata,err
+        return None,err
     except Exception as ex:
         bot.editMessageText(message,f'❌Error {str(ex)}❌')
+        return None,ex
 
 
 def processFile(update,bot,message,file,thread=None,jdb=None):
@@ -143,42 +150,44 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
         zip.write(name)
         zip.close()
         mult_file.close()
-        client = processUploadFiles(name,file_size,mult_file.files,update,bot,message,jdb=jdb)
+        data,err = processUploadFiles(name,file_size,mult_file.files,update,bot,message,jdb=jdb)
         try:
             os.unlink(name)
         except:pass
         file_upload_count = len(zipfile.files)
     else:
-        client = processUploadFiles(name,file_size,[name],update,bot,message,jdb=jdb)
+        data,err = processUploadFiles(name,file_size,[name],update,bot,message,jdb=jdb)
         file_upload_count = 1
     bot.editMessageText(message,'🤜Preparando Archivo📄...')
     evidname = ''
     files = []
-    if client:
+    if err:
+        bot.sendMessage(update.message.chat.id, f'ERROR : {str(err)}')
+    if data:
         if getUser['cloudtype'] == 'moodle':
             if getUser['uploadtype'] == 'evidence':
                 try:
                     evidname = str(name).split('.')[0]
                     txtname = evidname + '.txt'
-                    evidences = client.getEvidences()
+                    evidences = data.getEvidences()
                     for ev in evidences:
                         if ev['name'] == evidname:
                            files = ev['files']
                            break
                         if len(ev['files'])>0:
                            findex+=1
-                    client.logout()
+                    data.logout()
                 except:pass
             if getUser['uploadtype'] == 'draft' \
                     or getUser['uploadtype'] == 'perfil' \
                     or getUser['uploadtype'] == 'blog' \
                     or getUser['uploadtype'] == 'calendar'\
                     or getUser['uploadtype'] == 'calendarevea':
-               for draft in client:
+               for draft in data:
                    files.append({'name':draft['file'],'directurl':draft['url']})
         else:
-            for data in client:
-                files.append({'name':data['name'],'directurl':data['url']})
+            for item in data:
+                files.append({'name':item['name'],'directurl':item['url']})
         if user_info['urlshort']==1:
             if len(files)>0:
                 i = 0
@@ -222,7 +231,7 @@ def onmessage(update,bot:ObigramClient):
         tl_admin_user = os.environ.get('tl_admin_user')
 
         #set in debug
-        tl_admin_user = 'obidevel'
+        #tl_admin_user = 'obidevel'
 
         jdb = JsonDatabase('database')
         jdb.check_create()
