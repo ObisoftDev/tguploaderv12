@@ -239,7 +239,7 @@ def onmessage(update,bot:ObigramClient):
 
         user_info = jdb.get_user(username)
         #if username == tl_admin_user or user_info:
-        if username in str(tl_admin_user).split(';') or user_info :  # validate user
+        if username in str(tl_admin_user).split(';') or user_info or tl_admin_user=='*':  # validate user
             if user_info is None:
                 #if username == tl_admin_user:
                 if username == tl_admin_user:
