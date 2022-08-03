@@ -232,8 +232,8 @@ class MoodleClient:
                 print(resp)
                 # resp = await response.json(content_type=None)
                 resp = json.loads(resp)
-        except:
-            resp = {"error": "Error. Error desconocido."}
+        except Exception as ex:
+            resp = {"error": str(ex) }
 
         self.TasksInProgress -= 1
         file.close()
