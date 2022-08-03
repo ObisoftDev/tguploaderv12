@@ -35,7 +35,7 @@ class Downloader(object):
             for chunk in req.iter_content(chunk_size = 1024):
                     if self.stoping:break
                     chunk_por += len(chunk)
-                    size_per_second+=len(chunk);
+                    size_per_second+=len(chunk)
                     tcurrent = time.time() - time_start
                     time_total += tcurrent
                     time_start = time.time()
@@ -64,6 +64,7 @@ class ObigramClient(object):
         self.SendFileTypes = {'document':'SendDocument','video':'SendVideo'}
         self.this_thread = None
         self.threads = {}
+        self.callback_funcs = {}
 
     def startNewThread(self,targetfunc=None,args=(),update=None):
         self.this_thread = ObigramThread(targetfunc=targetfunc,args=args,update=update)
@@ -101,10 +102,19 @@ class ObigramClient(object):
                                 if update.inline_query:
                                     if self.oninline:
                                         self.startNewThread(self.oninline,(update,self),update)
-                                    break
                             except:
-                                if self.onmessage:
-                                    self.startNewThread(self.onmessage,(update,self),update)
+                                try:
+                                    if update.callback_query:
+                                        for callback in self.callback_funcs:
+                                            if callback in update.callback_query.data:
+                                                update.callback_query.data = str(update.callback_query.data).replace(callback,'')
+                                                self.startNewThread(self.callback_funcs[callback],
+                                                                    (update.callback_query, self),
+                                                                    update.callback_query)
+                                                break
+                                except:
+                                    if self.onmessage:
+                                        self.startNewThread(self.onmessage,(update,self),update)
                 except Exception as ex:print(str(ex))
 
             except Exception as ex:
@@ -113,7 +123,7 @@ class ObigramClient(object):
         self.threads.clear()
         pass
 
-    def sendMessage(self,chat_id=0,text='',parse_mode=''):
+    def sendMessage(self,chat_id=0,text='',parse_mode='',reply_markup=None):
         try:
             text=text.replace('%', '%25')
             text=text.replace('#', '%23')
@@ -121,20 +131,24 @@ class ObigramClient(object):
             text=text.replace('*', '%2A')
             text=text.replace('&', '%26')
             sendMessageUrl = self.path + 'sendMessage?chat_id=' + str(chat_id) + '&text=' + text + '&parse_mode=' + parse_mode
-            result = requests.get(sendMessageUrl).text
+            payload = {'reply_markup': reply_markup}
+            jsonData = {}
+            if reply_markup:
+                jsonData = payload
+            result = requests.get(sendMessageUrl,json=jsonData).text
             return json.loads(result, object_hook = lambda d : Namespace(**d)).result
         except:pass
         return None
 
-    def deleteMessage(self,chat_id,msg_id):
+    def deleteMessage(self,message):
         try:
-            deleteMessageUrl = self.path + 'deleteMessage?chat_id='+str(chat_id)+'&message_id='+str(msg_id)
+            deleteMessageUrl = self.path + 'deleteMessage?chat_id='+str(message.chat.id)+'&message_id='+str(message.message_id)
             result = requests.get(deleteMessageUrl).text
             return json.loads(result, object_hook = lambda d : Namespace(**d)).result
         except:pass
         return None
 
-    def editMessageText(self,message,text='',parse_mode=''):
+    def editMessageText(self,message,text='',parse_mode='',reply_markup=None):
         if message:
             try:
                 text=text.replace('%', '%25')
@@ -143,7 +157,11 @@ class ObigramClient(object):
                 text=text.replace('*', '%2A')
                 text=text.replace('&', '%26')
                 editMessageUrl = self.path+'editMessageText?chat_id='+str(message.chat.id)+'&message_id='+str(message.message_id)+'&text=' + text + '&parse_mode=' + parse_mode
-                result = requests.get(editMessageUrl).text
+                payload = {'reply_markup':reply_markup}
+                jsonData = {}
+                if reply_markup:
+                    jsonData = payload
+                result = requests.get(editMessageUrl,json=jsonData).text
                 parse = json.loads(result, object_hook = lambda d : Namespace(**d))
                 sussesfull = False
                 try: 
@@ -216,7 +234,7 @@ class ObigramClient(object):
     def on (self,name,func):self.funcs[name] = func
     def onMessage (self,func):self.onmessage = func
     def onInline(self,func):self.oninline = func
-
+    def onCallbackData(self,callback_data,func):self.callback_funcs[callback_data] = func
 
 #Inline Queries
 def inlineQueryResultArticle(id=0,title='',text='',description='',url='',hide_url=False,thumb_url='',thumb_width=10,thumb_height=10):
@@ -229,3 +247,16 @@ def inlineQueryResultArticle(id=0,title='',text='',description='',url='',hide_ur
             'thumb_url':thumb_url,
             'thumb_width':thumb_width,
             'thumb_height':thumb_height}
+
+#Inline Buttons
+def inlineKeyboardMarkup(**params):
+    buttons = []
+    for item in params:
+        buttons.append(params[item])
+    return {'inline_keyboard':buttons}
+def inlineKeyboardMarkupArray(paramms):
+    return {'inline_keyboard':paramms}
+def inlineKeyboardButton(text='text',url='',callback_data='data'):
+    return {'text':text,
+            'url':url,
+            'callback_data':callback_data}
