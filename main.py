@@ -2,7 +2,7 @@ from cProfile import run
 import pstats
 from pyobigram.utils import sizeof_fmt,get_file_size,createID,nice_time
 from pyobigram.client import ObigramClient,inlineQueryResultArticle
-from MoodleClient import MoodleClient
+from pyobigram.client import inlineKeyboardMarkup,inlineKeyboardMarkupArray,inlineKeyboardButton
 
 from JDatabase import JsonDatabase
 import shortener
@@ -28,6 +28,8 @@ import re
 import random
 from draft_to_calendar import send_calendar
 import moodlews
+import moodle_client
+from moodle_client import MoodleClient
 
 listproxy = []
 
@@ -50,7 +52,10 @@ def downloadFile(downloader,filename,currentBits,totalBits,speed,time,args):
         if thread.getStore('stop'):
             downloader.stop()
         downloadingInfo = infos.createDownloading(filename,totalBits,currentBits,speed,time,tid=thread.id)
-        bot.editMessageText(message,downloadingInfo)
+        reply_markup = inlineKeyboardMarkup(
+            r1=[inlineKeyboardButton('✘Cancelar Descarga✘', callback_data='/cancel '+str(thread.id))]
+        )
+        bot.editMessageText(message,downloadingInfo,reply_markup=reply_markup)
     except Exception as ex: print(str(ex))
     pass
 
@@ -68,7 +73,7 @@ def uploadFile(filename,currentBits,totalBits,speed,time,args):
 def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jdb=None):
     try:
         err = None
-        bot.editMessageText(message,'🤜Preparando Para Subir☁...')
+        bot.editMessageText(message,'☭reparando Para Subir... ')
         evidence = None
         fileid = None
         user_info = jdb.get_user(update.message.sender.username)
@@ -79,6 +84,7 @@ def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jd
             host = user_info['moodle_host']
             user = user_info['moodle_user']
             passw = user_info['moodle_password']
+            repoid = user_info['moodle_repo_id']
             token = moodlews.get_webservice_token(host,user,passw,proxy=proxy)
             if token:
                 print(token)
@@ -92,7 +98,17 @@ def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jd
                     else:
                         err = data[1]
             else:
-                err = 'Esta Nube No Tiene Sporte o Esta Caida 😢'
+                cli = MoodleClient(host,user,passw,repoid,proxy)
+                for file in files:
+                    data = asyncio.run(cli.LoginUpload(file, uploadFile, (bot, message, filename, thread)))
+                    while cli.status is None: pass
+                    data = cli.get_store(file)
+                    if data:
+                        if 'error' in data:
+                            err = data['error']
+                        else:
+                            draftlist.append({'file': file, 'url': data['url']})
+                pass
             return draftlist,err
         elif cloudtype == 'cloud':
             tokenize = False
@@ -158,51 +174,39 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
     else:
         data,err = processUploadFiles(name,file_size,[name],update,bot,message,jdb=jdb)
         file_upload_count = 1
-    bot.editMessageText(message,'🤜Preparando Archivo📄...')
+    bot.editMessageText(message,'☭Recolectando Informacion...')
     evidname = ''
     files = []
-    if err:
-        bot.sendMessage(update.message.chat.id, f'ERROR : {str(err)}')
     if data:
-        if getUser['cloudtype'] == 'moodle':
-            if getUser['uploadtype'] == 'evidence':
-                try:
-                    evidname = str(name).split('.')[0]
-                    txtname = evidname + '.txt'
-                    evidences = data.getEvidences()
-                    for ev in evidences:
-                        if ev['name'] == evidname:
-                           files = ev['files']
-                           break
-                        if len(ev['files'])>0:
-                           findex+=1
-                    data.logout()
-                except:pass
-            if getUser['uploadtype'] == 'draft' \
-                    or getUser['uploadtype'] == 'perfil' \
-                    or getUser['uploadtype'] == 'blog' \
-                    or getUser['uploadtype'] == 'calendar'\
-                    or getUser['uploadtype'] == 'calendarevea':
-               for draft in data:
-                   files.append({'name':draft['file'],'directurl':draft['url']})
-        else:
-            for item in data:
-                files.append({'name':item['name'],'directurl':item['url']})
+        for draft in data:
+            files.append({'name':draft['file'],'directurl':draft['url']})
         if user_info['urlshort']==1:
             if len(files)>0:
                 i = 0
                 while i < len(files):
                     files[i]['directurl'] = shortener.short_url(files[i]['directurl'])
                     i+=1
-        bot.deleteMessage(message.chat.id,message.message_id)
+        bot.deleteMessage(message)
         finishInfo = infos.createFinishUploading(name,file_size,max_file_size,file_upload_count,file_upload_count,findex)
-        filesInfo = infos.createFileMsg(name,files)
-        bot.sendMessage(message.chat.id,finishInfo+'\n'+filesInfo,parse_mode='html')
-        if len(files)>0:
-            txtname = str(name).split('/')[-1].split('.')[0] + '.txt'
-            sendTxt(txtname,files,update,bot)
+        markup_array = []
+        i=0
+        for item in files:
+            bbt = [inlineKeyboardButton(files[i]['name'],url=files[i]['directurl'])]
+            if i+1 < len(files):
+                bbt.append(inlineKeyboardButton(files[i+1]['name'],url=files[i+1]['directurl']))
+            markup_array.append(bbt)
+            i+=1
+        if len(files) > 0:
+            txtname = str(file).split('/')[-1].split('.')[0] + '.txt'
+            markup_array.append([inlineKeyboardButton('✎ Crear TxT ✎',callback_data='/maketxt '+txtname)])
+        markup_array.append([inlineKeyboardButton('☠ Eliminar Archivo ☠',callback_data='/deletefile')])
+        reply_markup = inlineKeyboardMarkupArray(markup_array)
+        bot.sendMessage(message.chat.id,finishInfo,parse_mode='html',reply_markup=reply_markup)
     else:
-        bot.editMessageText(message,'❌Error En La Pagina❌')
+        error = '❌Error En La Pagina❌'
+        if err:
+            error = err
+        bot.editMessageText(message,error)
 
 def ddl(update,bot,message,url,file_name='',thread=None,jdb=None):
     downloader = Downloader()
@@ -228,10 +232,10 @@ def onmessage(update,bot:ObigramClient):
     try:
         thread = bot.this_thread
         username = update.message.sender.username
-        tl_admin_user = os.environ.get('tl_admin_user')
+        #tl_admin_user = os.environ.get('tl_admin_user')
 
         #set in debug
-        #tl_admin_user = 'obidevel'
+        tl_admin_user = 'obidevel'
 
         jdb = JsonDatabase('database')
         jdb.check_create()
@@ -249,10 +253,11 @@ def onmessage(update,bot:ObigramClient):
                 user_info = jdb.get_user(username)
                 jdb.save()
         else:
-            mensaje = "❌No tienes Acceso❌.\nPor favor Contacta con mi Programador @Wachu985\n"
-            intento_msg = "💢El usuario @"+username+ " ha intentando usar el bot sin permiso💢"
-            bot.sendMessage(update.message.chat.id,mensaje)
-            bot.sendMessage(958475767,intento_msg)
+            mensaje = "🚷 No tienes Acceso 🚷"
+            reply_markup = inlineKeyboardMarkup(
+                r1=[inlineKeyboardButton('⚙Contactar Soporte⚙',url='https://t.me/obidevel')]
+            )
+            bot.sendMessage(update.message.chat.id,mensaje,reply_markup=reply_markup)
             return
 
 
@@ -317,106 +322,6 @@ def onmessage(update,bot:ObigramClient):
                     bot.sendMessage(update.message.chat.id,'❌Error en el comando /checkproxy❌')
             else:
                 bot.sendMessage(update.message.chat.id,'❌No Tiene Permiso❌')
-            return
-        if '/setevea' in msgText:
-            getUser = user_info
-            user = ''
-            passw = ''
-            hostmo = 'https://evea.uh.cu/'
-            zips = 240
-            repoid = 4
-            uptype = 'calendarevea' 
-            if getUser:
-                getUser['moodle_user'] = user
-                getUser['moodle_password'] = passw
-                getUser['moodle_host'] = hostmo
-                getUser['zips'] = zips
-                getUser['uploadtype'] = uptype
-                getUser['moodle_repo_id'] = repoid
-                jdb.save_data_user(username,getUser)
-                jdb.save()
-                statInfo = infos.createStat(username,getUser,jdb.is_admin(username))
-                bot.sendMessage(update.message.chat.id,statInfo)
-            return
-        if '/seteva' in msgText:
-            getUser = user_info
-            user = ''
-            passw = ''
-            hostmo = 'https://eva.uo.edu.cu/'
-            zips = 99
-            repoid = 4
-            uptype = 'calendar' 
-            if getUser:
-                getUser['moodle_user'] = user
-                getUser['moodle_password'] = passw
-                getUser['moodle_host'] = hostmo
-                getUser['zips'] = zips
-                getUser['uploadtype'] = uptype
-                getUser['moodle_repo_id'] = repoid
-                jdb.save_data_user(username,getUser)
-                jdb.save()
-                statInfo = infos.createStat(username,getUser,jdb.is_admin(username))
-                bot.sendMessage(update.message.chat.id,statInfo)
-            return
-        if '/setcursos' in msgText:
-            getUser = user_info
-            user = ''
-            passw = ''
-            hostmo = 'https://cursos.uo.edu.cu/'
-            zips = 99
-            repoid = 4
-            uptype = 'draft' 
-            if getUser:
-                getUser['moodle_user'] = user
-                getUser['moodle_password'] = passw
-                getUser['moodle_host'] = hostmo
-                getUser['zips'] = zips
-                getUser['uploadtype'] = uptype
-                getUser['moodle_repo_id'] = repoid
-                jdb.save_data_user(username,getUser)
-                jdb.save()
-                statInfo = infos.createStat(username,getUser,jdb.is_admin(username))
-                bot.sendMessage(update.message.chat.id,statInfo)
-            return
-        if '/setedu' in msgText:
-            getUser = user_info
-            user = ''
-            passw = ''
-            hostmo = 'https://eduvirtual.uho.edu.cu/'
-            zips = 2000
-            repoid = 3
-            uptype = 'blog' 
-            if getUser:
-                getUser['moodle_user'] = user
-                getUser['moodle_password'] = passw
-                getUser['moodle_host'] = hostmo
-                getUser['zips'] = zips
-                getUser['uploadtype'] = uptype
-                getUser['moodle_repo_id'] = repoid
-                jdb.save_data_user(username,getUser)
-                jdb.save()
-                statInfo = infos.createStat(username,getUser,jdb.is_admin(username))
-                bot.sendMessage(update.message.chat.id,statInfo)
-            return
-        if '/setuclv' in msgText:
-            getUser = user_info
-            user = ''
-            passw = ''
-            hostmo = 'https://moodle.uclv.edu.cu/'
-            zips = 359
-            repoid = 4
-            uptype = 'calendar' 
-            if getUser:
-                getUser['moodle_user'] = user
-                getUser['moodle_password'] = passw
-                getUser['moodle_host'] = hostmo
-                getUser['zips'] = zips
-                getUser['uploadtype'] = uptype
-                getUser['moodle_repo_id'] = repoid
-                jdb.save_data_user(username,getUser)
-                jdb.save()
-                statInfo = infos.createStat(username,getUser,jdb.is_admin(username))
-                bot.sendMessage(update.message.chat.id,statInfo)
             return
         if '/shorturl' in msgText:
             isadmin = jdb.is_admin(username)
@@ -663,32 +568,20 @@ def onmessage(update,bot:ObigramClient):
             except:
                 bot.sendMessage(update.message.chat.id,'❌Error en el comando /dir folder❌')
             return
-        if '/cancel_' in msgText:
-            try:
-                cmd = str(msgText).split('_',2)
-                tid = cmd[1]
-                tcancel = bot.threads[tid]
-                msg = tcancel.getStore('msg')
-                tcancel.store('stop',True)
-                time.sleep(3)
-                bot.editMessageText(msg,'❌Tarea Cancelada❌')
-            except Exception as ex:
-                print(str(ex))
-            return
         #end
 
-        message = bot.sendMessage(update.message.chat.id,'🕰Procesando🕰...')
+        message = bot.sendMessage(update.message.chat.id,'⏳Procesando...')
 
         thread.store('msg',message)
 
         if '/start' in msgText:
-            start_msg = '<b>💻Bot: Moodle Wachu Venta 1 V7.1</b>\n'
-            start_msg+= '<b>📭Desarrollador: @Wachu985</b>\n'
-            start_msg+= '<b>📌Guia: </b> <a href="https://nube.reduc.edu.cu/index.php/s/L9WMzC56ZgTZo6b/download/Tutorial%20R%C3%A1pido%20.mp4">AQUI</a>\n'
-            start_msg+= '<b>🚨Uso: Envia Enlaces De Descarga y Archivos Para Procesar (Configure Antes De Empezar , Vea El /tutorial)</b>\n'
-            bot.editMessageText(message,start_msg,parse_mode='html')
+            reply_markup = inlineKeyboardMarkup(
+                r1=[inlineKeyboardButton('📊 Github Dev 📊', url='https://github.com/ObisoftDev'),
+                    inlineKeyboardButton('⚙ Soporte ⚙', url='https://t.me/obidevel')]
+            )
+            bot.editMessageText(message,infos.dashboard(),parse_mode='html',reply_markup=reply_markup)
         elif '/token' in msgText:
-            message2 = bot.editMessageText(message,'Obteniendo Token...')
+            message2 = bot.editMessageText(message,'⏳Obteniendo Token...')
             try:
                 proxy = ProxyCloud.parse(user_info['proxy'])
                 client = MoodleClient(user_info['moodle_user'],
@@ -811,6 +704,34 @@ def onmessage(update,bot:ObigramClient):
     except Exception as ex:
            print(str(ex))
 
+def cancel_task(update,bot:ObigramClient):
+    try:
+        cmd = str(update.data).split(' ', 2)
+        tid = cmd[1]
+        tcancel = bot.threads[tid]
+        msg = tcancel.getStore('msg')
+        tcancel.store('stop', True)
+        time.sleep(3)
+        bot.deleteMessage(update.message)
+    except Exception as ex:
+        print(str(ex))
+    return
+    pass
+
+def maketxt(update,bot:ObigramClient):
+    print(update)
+    data = update.message.reply_markup.inline_keyboard
+    urls = []
+    for item in data:
+        for keyboard in item:
+            try:
+                name = keyboard.text
+                url = keyboard.url
+                urls.append({'name':name,'directurl':url})
+            except:pass
+    txtname = str(update.data).replace(' ','')
+    sendTxt(txtname,urls,update,bot)
+    pass
 
 def main():
     bot_token = os.environ.get('bot_token')
@@ -819,6 +740,8 @@ def main():
     #bot_token = '5350913309:AAE6_F3tyck8PQSComzgd0o6AeQ3xpKDcIU'
     bot = ObigramClient(bot_token)
     bot.onMessage(onmessage)
+    bot.onCallbackData('/cancel',cancel_task)
+    bot.onCallbackData('/maketxt', maketxt)
     bot.run()
 
 if __name__ == '__main__':

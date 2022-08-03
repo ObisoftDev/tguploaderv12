@@ -21,7 +21,7 @@ def get_webservice_token(host='',username='',password='',proxy:ProxyCloud=None):
         if proxy:
             pproxy=proxy.as_dict_proxy()
         webserviceurl = f'{host}login/token.php?service=moodle_mobile_app&username={username}&password={password}'
-        resp = requests.get(webserviceurl, proxies=pproxy)
+        resp = requests.get(webserviceurl, proxies=pproxy,timeout=8)
         data = json.loads(resp.text)
         if data['token']!='':
             return data['token']
@@ -76,15 +76,12 @@ def clear_store():store.clear()
 
 async def webservice_upload_file(host='',token='',filepath='',progressfunc=None,args=None,proxy:ProxyCloud=None):
     try:
-        pproxy = None
-        if proxy:
-            pproxy= proxy.as_dict_proxy()
         webserviceuploadurl = f'{host}/webservice/upload.php?token={token}&filepath=/'
         filesize = os.stat(filepath).st_size
         of = ProgressFile(filepath,progressfunc,args)
         files={filepath: of}
         jsondata = '[]'
-        if pproxy:
+        if proxy:
             connector = ProxyConnector(
                  proxy_type=ProxyType.SOCKS5,
                  host=proxy.ip,
@@ -93,11 +90,11 @@ async def webservice_upload_file(host='',token='',filepath='',progressfunc=None,
                  verify_ssl=False
             )
             async with aiohttp.ClientSession(connector=connector) as session:
-                async with session.post(webserviceuploadurl, data={filepath: of}) as response:
+                async with session.post(webserviceuploadurl, data={filepath: of},timeout=8) as response:
                     jsondata = await response.text()
         else:
             async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
-                async with session.post(webserviceuploadurl, data={filepath: of}) as response:
+                async with session.post(webserviceuploadurl, data={filepath: of},timeout=8) as response:
                     jsondata = await response.text()
         #resp = requests.post(webserviceuploadurl,data={filepath:of}, proxies=pproxy)
         of.close()
