@@ -30,6 +30,7 @@ from draft_to_calendar import Draft2Calendar
 import moodlews
 import moodle_client
 from moodle_client import MoodleClient
+import S5Crypto
 
 listproxy = []
 
@@ -197,14 +198,15 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
                 bbt.append(inlineKeyboardButton(files[i+1]['name'],url=files[i+1]['directurl']))
             markup_array.append(bbt)
             i+=2
-        datacallback = user_info['moodle_host'] + ' ' + user_info['moodle_user'] + ' ' + user_info['moodle_password']
+        datacallback = user_info['moodle_host'] + '|' + user_info['moodle_user'] + '|' + user_info['moodle_password']
         if user_info['proxy'] != '':
-            datacallback += ' ' + user_info['proxy']
+            datacallback += '|' + user_info['proxy']
+        datacallback = S5Crypto.encrypt(datacallback)
         if len(files) > 0:
             txtname = str(file).split('/')[-1].split('.')[0] + '.txt'
             markup_array.append([inlineKeyboardButton('✎Crear TxT✎',callback_data='/maketxt '+txtname),
-                                 inlineKeyboardButton('❧Convertir (Calendario)☙',callback_data='/convert2calendar ' + datacallback)])
-        markup_array.append([inlineKeyboardButton('☠Eliminar Archivo☠',callback_data='/deletefile ' + datacallback)])
+                                 inlineKeyboardButton('❧Convertir (Calendario)☙',callback_data='/convert2calendar ')])
+        markup_array.append([inlineKeyboardButton('☠Eliminar Archivo☠',callback_data='/deletefile ')])
         reply_markup = inlineKeyboardMarkupArray(markup_array)
         bot.sendMessage(message.chat.id,finishInfo,parse_mode='html',reply_markup=reply_markup)
     else:
