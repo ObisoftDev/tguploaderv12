@@ -189,7 +189,6 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
                     files[i]['directurl'] = shortener.short_url(files[i]['directurl'])
                     i+=1
         bot.deleteMessage(message)
-        finishInfo = infos.createFinishUploading(name,file_size,max_file_size,file_upload_count,file_upload_count,findex)
         markup_array = []
         i=0
         while i < len(files):
@@ -202,6 +201,7 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
         if user_info['proxy'] != '':
             datacallback += '|' + user_info['proxy']
         datacallback = S5Crypto.encrypt(datacallback)
+        finishInfo = infos.createFinishUploading(name,file_size,datacallback)
         if len(files) > 0:
             txtname = str(file).split('/')[-1].split('.')[0] + '.txt'
             markup_array.append([inlineKeyboardButton('✎Crear TxT✎',callback_data='/maketxt '+txtname),
