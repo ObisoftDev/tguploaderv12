@@ -782,7 +782,7 @@ def convert2calendar(update,bot:ObigramClient):
                 urls.append(url)
             except:
                 pass
-    parserdata = str(update.data).split(' ')
+    parserdata = S5Crypto.decrypt(str(update.message.text).split('\n')[1]).split('|')
     parser = Draft2Calendar()
     host = parserdata[0]
     user = parserdata[1]
