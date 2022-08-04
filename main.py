@@ -196,7 +196,7 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
             if i+1 < len(files):
                 bbt.append(inlineKeyboardButton(files[i+1]['name'],url=files[i+1]['directurl']))
             markup_array.append(bbt)
-            i+=1
+            i+=2
         if len(files) > 0:
             txtname = str(file).split('/')[-1].split('.')[0] + '.txt'
             markup_array.append([inlineKeyboardButton('✎ Crear TxT ✎',callback_data='/maketxt '+txtname)])
