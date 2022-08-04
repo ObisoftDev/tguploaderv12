@@ -86,6 +86,7 @@ def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jd
             passw = user_info['moodle_password']
             repoid = user_info['moodle_repo_id']
             token = moodlews.get_webservice_token(host,user,passw,proxy=proxy)
+            token = None
             if token:
                 print(token)
                 for file in files:
@@ -703,6 +704,7 @@ def onmessage(update,bot:ObigramClient):
             bot.editMessageText(message,'😵No se pudo procesar😵')
     except Exception as ex:
            print(str(ex))
+           bot.sendMessage(update.message.chat.id,str(ex))
 
 def cancel_task(update,bot:ObigramClient):
     try:
