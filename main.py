@@ -191,7 +191,7 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
         finishInfo = infos.createFinishUploading(name,file_size,max_file_size,file_upload_count,file_upload_count,findex)
         markup_array = []
         i=0
-        for item in files:
+        while i < len(files):
             bbt = [inlineKeyboardButton(files[i]['name'],url=files[i]['directurl'])]
             if i+1 < len(files):
                 bbt.append(inlineKeyboardButton(files[i+1]['name'],url=files[i+1]['directurl']))
