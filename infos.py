@@ -63,8 +63,10 @@ def createCompresing(filename,filesize,splitsize):
     msg+= '➤Tamaño Partes: ' + str(sizeof_fmt(splitsize))+'\n'
     msg+= '➤Cantidad Partes: ' + str(round(int(filesize/splitsize)+1,1))+'\n\n'
     return msg
-def createFinishUploading(filename,filesize,split_size,current,count,findex):
+def createFinishUploading(filename,filesize,datacallback=None):
     msg = '✔ ' + str(filename)+ f' Subido {str(sizeof_fmt(filesize))}\n'
+    if datacallback:
+       msg += 'datacallback: ' + datacallback
     return msg
 
 def createFileMsg(filename,files):
