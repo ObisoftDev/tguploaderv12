@@ -137,7 +137,7 @@ class ObigramClient(object):
                 jsonData = payload
             result = requests.get(sendMessageUrl,json=jsonData).text
             return json.loads(result, object_hook = lambda d : Namespace(**d)).result
-        except:pass
+        except Exception as ex:print(str(ex))
         return None
 
     def deleteMessage(self,message):
@@ -171,7 +171,7 @@ class ObigramClient(object):
                 except: pass
                 message.text = text
                 return message
-            except: pass
+            except Exception as ex:print(str(ex))
         return None
 
 
@@ -228,7 +228,7 @@ class ObigramClient(object):
             sussesfull = parse.ok and parse.result 
             if sussesfull == False:
                  print('Error InlineAnswer: '+str(parse.description))
-        except: pass
+        except Exception as ex:print(str(ex))
         return sussesfull
 
     def on (self,name,func):self.funcs[name] = func
