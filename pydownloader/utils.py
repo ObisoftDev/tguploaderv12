@@ -3,7 +3,7 @@ import os
 import re
 import unicodedata
 import re
-
+import string
 
 def slugify(value, allow_unicode=False):
     """
@@ -69,3 +69,12 @@ def createID(count=8):
         id+=map[rnd]
         i+=1
     return id
+
+def makeSafeFilename(inputFilename):
+    # Set here the valid chars
+    safechars = string.letters + string.digits + "~ -_."
+    try:
+        return filter(lambda c: c in safechars, inputFilename)
+    except:
+        return ""
+    pass
