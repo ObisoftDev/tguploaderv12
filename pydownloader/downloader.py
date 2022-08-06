@@ -55,7 +55,7 @@ class Downloader(object):
             file_name = get_url_file_name(url,req)
             if self.filename!='':
                 file_name = self.filename
-                file_name = makeSafeFilename(file_name)
+                self.filename = makeSafeFilename(file_name)
             else:
                 file_name = makeSafeFilename(file_name)
                 self.filename = file_name
