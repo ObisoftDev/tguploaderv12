@@ -72,9 +72,11 @@ def createID(count=8):
 
 def makeSafeFilename(inputFilename):
     # Set here the valid chars
-    safechars = string.letters + string.digits + "~ -_."
-    try:
-        return filter(lambda c: c in safechars, inputFilename)
-    except:
-        return ""
-    pass
+    ret = ''
+    map = '0123456789abcd3fghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    for char in inputFilename:
+        if char in map:
+           ret += char
+        else:
+           ret += ' '
+    return ret
