@@ -131,7 +131,6 @@ class ObigramClient(object):
             text=text.replace('+', '%2B')
             text=text.replace('*', '%2A')
             text=text.replace('&', '%26')
-            text = re.escape(text)
             sendMessageUrl = self.path + 'sendMessage?chat_id=' + str(chat_id) + '&text=' + text + '&parse_mode=' + parse_mode
             payload = {'reply_markup': reply_markup}
             jsonData = {}
@@ -157,7 +156,6 @@ class ObigramClient(object):
                 text=text.replace('#', '%23')
                 text=text.replace('+', '%2B')
                 text=text.replace('*', '%2A')
-                text = re.escape(text)
                 text=text.replace('&', '%26')
                 editMessageUrl = self.path+'editMessageText?chat_id='+str(message.chat.id)+'&message_id='+str(message.message_id)+'&text=' + text + '&parse_mode=' + parse_mode
                 payload = {'reply_markup':reply_markup}
