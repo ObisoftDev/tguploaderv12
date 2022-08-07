@@ -29,6 +29,13 @@ class Draft2Calendar(object):
             # Extraer el token de inicio de sesión
             try:
                 # Login
+                html = ''
+                token = None
+                async with session.get(moodle + "/login/index.php") as response:
+                    resp = await response.text()
+                    data = json.loads(resp)
+                    if 'token' in data:
+                        token = data['token']
                 async with session.get(moodle + "/login/index.php") as response:
                     html = await response.text()
                 soup = BeautifulSoup(html, "html.parser")
