@@ -89,6 +89,7 @@ class Draft2Calendar(object):
                        durl = str(url).replace('pluginfile.php','webservice/pluginfile.php')
                        durl += '?token=' + token
                        data[i] = durl
+                       i += 1
                 self.data = data
                 return data
             except Exception as e:
