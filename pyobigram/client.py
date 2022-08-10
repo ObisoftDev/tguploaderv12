@@ -137,7 +137,10 @@ class ObigramClient(object):
             if reply_markup:
                 jsonData = payload
             result = requests.get(sendMessageUrl,json=jsonData).text
-            return json.loads(result, object_hook = lambda d : Namespace(**d)).result
+            jsondata = json.loads(result, object_hook = lambda d : Namespace(**d))
+            try:
+               return jsondata.result
+            except:print(str(result))
         except Exception as ex:print(str(ex))
         return None
 
