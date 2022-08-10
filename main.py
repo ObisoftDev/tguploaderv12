@@ -135,7 +135,7 @@ def processUploadFiles(filename,filesize,files,update,bot,message,thread=None,jd
                return filesdata,err
         return None,err
     except Exception as ex:
-        bot.editMessageText(message,f'❌Error {str(ex)}❌')
+        bot.sendMessage(message.chat.id,f'❌Error {str(ex)}❌')
         return None,ex
 
 
