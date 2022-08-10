@@ -260,7 +260,10 @@ def inlineKeyboardMarkup(**params):
     return {'inline_keyboard':buttons}
 def inlineKeyboardMarkupArray(paramms):
     return {'inline_keyboard':paramms}
-def inlineKeyboardButton(text='text',url='',callback_data='data'):
-    return {'text':text,
-            'url':url,
-            'callback_data':callback_data}
+def inlineKeyboardButton(text='text',url='',callback_data=''):
+    result = {'text':text}
+    if url!='':
+       result['url'] = url
+    if callback_data!='':
+       result['callback_data'] = callback_data
+    return result
