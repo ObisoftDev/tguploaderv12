@@ -40,7 +40,7 @@ def req_file_size(req):
 def get_url_file_name(url,req):
     try:
         if "Content-Disposition" in req.headers.keys():
-                name = str(req.headers["Content-Disposition"])
+                name = str(req.headers["Content-Disposition"]).replace('attachment;', '').replace('attachment', '') 
                 name = name.replace('filename=','').replace('"','')
                 return name
         else:
