@@ -189,26 +189,12 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
                     files[i]['directurl'] = shortener.short_url(files[i]['directurl'])
                     i+=1
         bot.deleteMessage(message)
-        markup_array = []
-        i=0
-        while i < len(files):
-            bbt = [inlineKeyboardButton(files[i]['name'],url=files[i]['directurl'])]
-            if i+1 < len(files):
-                bbt.append(inlineKeyboardButton(files[i+1]['name'],url=files[i+1]['directurl']))
-            markup_array.append(bbt)
-            i+=2
-        datacallback = user_info['moodle_host'] + '|' + user_info['moodle_user'] + '|' + user_info['moodle_password']
-        if user_info['proxy'] != '':
-            datacallback += '|' + user_info['proxy']
-        datacallback = S5Crypto.encrypt(datacallback)
-        finishInfo = infos.createFinishUploading(name,file_size,datacallback)
-        if len(files) > 0:
+        finishInfo = infos.createFinishUploading(file,file_size)
+        filesInfo = infos.createFileMsg(file,files)
+        bot.sendMessage(message.chat.id,finishInfo+'\n'+filesInfo,parse_mode='html')
+        if len(files)>0:
             txtname = str(file).split('/')[-1].split('.')[0] + '.txt'
-            markup_array.append([inlineKeyboardButton('✎Crear TxT✎',callback_data='/maketxt '+txtname),
-                                 inlineKeyboardButton('❧Convertir (Calendario)☙',callback_data='/convert2calendar ')])
-        markup_array.append([inlineKeyboardButton('☠Eliminar Archivo☠',callback_data='/deletefile ')])
-        reply_markup = inlineKeyboardMarkupArray(markup_array)
-        bot.sendMessage(message.chat.id,finishInfo,parse_mode='html',reply_markup=reply_markup)
+            sendTxt(txtname,files,update,bot)
     else:
         error = '❌Error En La Pagina❌'
         if err:
@@ -242,7 +228,7 @@ def onmessage(update,bot:ObigramClient):
         tl_admin_user = os.environ.get('tl_admin_user')
 
         #set in debug
-        #tl_admin_user = 'obidevel'
+        tl_admin_user = 'obidevel'
 
         jdb = JsonDatabase('database')
         jdb.check_create()
@@ -818,7 +804,7 @@ def main():
     bot_token = os.environ.get('bot_token')
     print('init bot.')
     #set in debug
-    #bot_token = '5350913309:AAE6_F3tyck8PQSComzgd0o6AeQ3xpKDcIU'
+    bot_token = '5350913309:AAHdMDFYF8Aeh-lkU1uHfKAPvSnXVg3oUYI'
     bot = ObigramClient(bot_token)
     bot.onMessage(onmessage)
     bot.onCallbackData('/cancel ',cancel_task)
