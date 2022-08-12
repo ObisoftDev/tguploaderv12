@@ -37,4 +37,4 @@ git push heroku master
 /getdb : Obten la base de datos donde se almacenan la info de los usarios en el bot
 ```
 # Deploy Directo (Heroku)
-[![Heroku Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/ObisoftDev/tguploaderpro)
+[![Heroku Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/ObisoftDev/tguploaderv12)
