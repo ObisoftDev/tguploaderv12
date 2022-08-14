@@ -189,8 +189,8 @@ def processFile(update,bot,message,file,thread=None,jdb=None):
                     files[i]['directurl'] = shortener.short_url(files[i]['directurl'])
                     i+=1
         bot.deleteMessage(message)
-        finishInfo = infos.createFinishUploading(file,file_size)
-        filesInfo = infos.createFileMsg(file,files)
+        finishInfo = infos.createFinishUploading(name,file_size)
+        filesInfo = infos.createFileMsg(name,files)
         bot.sendMessage(message.chat.id,finishInfo+'\n'+filesInfo,parse_mode='html')
         if len(files)>0:
             txtname = str(file).split('/')[-1].split('.')[0] + '.txt'
